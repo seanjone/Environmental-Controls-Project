@@ -29,10 +29,11 @@ broker = '127.0.0.1'
 client.connect(broker)
 print('Connecting to broker...\n')
 #Continuously toggle on command to test
+client.publish('zigbee2mqtt/0x000d6f000a76cdff/set', '{"state":"OFF"}')
 while True:
     input('Press enter to toggle switch')
     print('Command')
-    client.publish('zigbee2mqtt/FRIENDLY_NAME/set', '{"state":"TOGGLE"}')
+    client.publish('zigbee2mqtt/0x00124b001e71fbf4/set', '{"state":"TOGGLE"}')
 
 
 

@@ -4,7 +4,6 @@
 		<friendly_name>0x00124b001e71fbf4</friendly_name>
 		<manu>Not Peanut</manu>	
 	</zigbee-node>
-	
 	<zigbee-node>
 		<friendly_name>0x000d6f0005349f80</friendly_name>
 		<manu>Peanut</manu>	

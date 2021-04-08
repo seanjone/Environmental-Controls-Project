@@ -11,6 +11,22 @@ import xml.etree.ElementTree as ET
 import os
 import sys
 
+#create an instance of the mqtt client (ZO1 = zigbee outlet control)
+client = mqtt.Client('ZOC')
+
+#changes init zigbee control node once (not every time script is called) and return friendly names
+def zigbee_init():
+    global client
+    # set client log and connect callback functions
+    client.on_log = on_log
+    client.on_connect = on_connect
+    # connect client to mqtt broker running locally on pi
+    broker = '127.0.0.1'
+    client.connect(broker)
+    print('Connecting to broker...')
+    update_friendly_names()
+    return get_friendly_names()
+
 #define on_log function for mqtt client
 def on_log(client, userdata, level, buf):
     print('Log: ' + buf)
@@ -34,17 +50,14 @@ def get_friendly_names():
         friendly_names.append(zig_node[0].text)
     return friendly_names
 
+#use database file to update friendly name xml
+def update_friendly_names():
+    return 0
+
 if __name__ == '__main__':
-    #create an instance of the mqtt client (ZO1 = zigbee outlet 1)
-    client = mqtt.Client('ZO1')
-    #set client log and connect callback functions
-    client.on_log=on_log
-    client.on_connect=on_connect
-    #connect client to mqtt broker running locally on pi
-    broker = '127.0.0.1'
-    client.connect(broker)
-    print('Connecting to broker...')
     #get command line args for friendly name and command
+    #script called with ID not friendly name
+    #call light is 0
     friendly_name = sys.argv[1]
     command = sys.argv[2]
     command = "{\"state\":\"" + str(command) +"\"}"

@@ -6,7 +6,7 @@
 	</zigbee-node>
 	<zigbee-node>
 		<friendly_name>0x000d6f0005349f80</friendly_name>
-		<manu>Peanut</manu>	
+		<manu>Call Light</manu>
 	</zigbee-node>
 </nodes>
 

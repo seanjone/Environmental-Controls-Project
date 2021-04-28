@@ -3,21 +3,20 @@ Author: Sean Jones
 Date: 2/8/2021
 Purpose: Control zigbee outlets via python mqtt client.
 """
-#call light fn: 0x000d6f0005349f80
-#import mqtt client class
-#import paho.mqtt.client as mqtt
-#import xml ElementTree parser
+
+import paho.mqtt.client as mqtt
 import xml.etree.ElementTree as ET
 import os
-import sys
 import json
 
 #create an instance of the mqtt client (ZO1 = zigbee outlet control)
-#client = mqtt.Client('ZOC')
+client = mqtt.Client('ZOC')
 call_fn = '0x000d6f0005349f80'
+fns = []
+
 #changes init zigbee control node once (not every time script is called) and return friendly names
 def zigbee_init():
-    global client
+    global client, fns
     # set client log and connect callback functions
     client.on_log = on_log
     client.on_connect = on_connect
@@ -26,7 +25,8 @@ def zigbee_init():
     client.connect(broker)
     print('Connecting to broker...')
     update_friendly_names()
-    return get_friendly_names()
+    fns = get_friendly_names()
+    return fns
 
 #define on_log function for mqtt client
 def on_log(client, userdata, level, buf):
@@ -41,7 +41,9 @@ def on_connect(client, userdata, flags, rc):
 
 #look through data base file and add any new friendly names to xml file
 def get_friendly_names():
+    global fns
     #read in friendly name data
+    update_friendly_names()
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
@@ -50,11 +52,13 @@ def get_friendly_names():
     for zig_node in root:
         print(zig_node[0].text)
         friendly_names.append(zig_node[0].text)
-    return friendly_names
+    fns = friendly_names
+    return fns
 
 #use database file to update friendly name xml
+#remove any unseen fns
 def update_friendly_names():
-    global call_fn
+    global call_fn, fns
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
@@ -77,27 +81,54 @@ def update_friendly_names():
                     new_node[1].text = "Call light device"
                 root.append(new_node)
     tree.write(frnd_file)
-    return 0
+    #check for devices not on network anymore
+    fns_new = get_friendly_names()
+    for fn in fns:
+        if fn not in fns_new:
+            fns.remove(fn)
+    return fns
 
+#used to set states of devices, arg is on or off
 def send_cmd(id, arg):
-  return ["cmdA",id,arg]
+    global client
+    command = "{\"state\":\"" + str(arg) + "\"}"
+    client.publish('zigbee2mqtt/' + fns[id] + '/set', command)
+    return [str(command),id,arg]
 
-#move fn to top (call light)
+#id given
 def set_cl(id):
-  return ["set_cl",id]
+    global call_fn, fns
+    #update call light variable
+    call_fn = fns[id]
+    #move cl to top of list
+    fns.insert(0, fns.pop(fns.index(call_fn)))
+    return ["set_cl",id]
 
+#returns dictionary
 def get_states():
-  return [4,5]
+    global fns, client
+    states = {}
+    for fn in fns:
+        command = "{\"state\":\"""\"}"
+        # Publish command to zigbee device
+        state = client.publish('zigbee2mqtt/' + fn + '/get', command)
+        state = state['features']['value_on']
+        states[fn] = state
+    return states
 
+#id given
 def get_state(id):
-  return 5
+    global fns
+    return get_states()[fns[int(id)]]
 
 def get_fns():
-  return [12,15,17,14,13]
+    return get_friendly_names()
 
+#given id
 def get_fn(id):
-  return get_fns()[int(id)]
+    return get_fns()[int(id)]
 
+# for testing purposes only
 if __name__ == '__main__':
     #get command line args for friendly name and command
     #script called with ID not friendly name

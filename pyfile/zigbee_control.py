@@ -110,9 +110,9 @@ def get_states():
     # use /opt/zigbee2mqtt/data/state.json
     states = {}
     state_file = open('/opt/zigbee2mqtt/data/state.json')
-    for obj in state_file:
-        print(obj)
-        #curr_devices.append(json.loads(obj))
+    data = json.load(state_file)
+    for obj in data:
+	states[obj] = data[obj]['state']
     return states
 
 #id given
@@ -133,5 +133,5 @@ if __name__ == '__main__':
     #command = "{\"state\":\"" + str(command) +"\"}"
     #Publish command to zigbee device
     #client.publish('zigbee2mqtt/' + friendly_name + '/set', command)
-    update_friendly_names()
+    print(get_states())
     print('Task completed\n')

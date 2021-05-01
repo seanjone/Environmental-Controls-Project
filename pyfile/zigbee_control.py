@@ -124,7 +124,7 @@ def get_fn(id):
 if __name__ == '__main__':
     zigbee_init()    
     while True:
-        comm = input('Control which dev?')
+        comm = input('Dev id: ')
         fns = get_friendly_names()
         print(get_states())
         set_state(comm, 'TOGGLE')

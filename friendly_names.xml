@@ -1,8 +1,2 @@
-<nodes>
-    <zigbee-node>
-        <friendly_name>0x000d6f0005349f80</friendly_name>
-    </zigbee-node>
-    <zigbee-node>
-        <friendly_name>0x00124b001e71fbf4</friendly_name>
-    </zigbee-node>
-</nodes>
+<zigbee_nodes>
+<zigbee-node><friendly_name>0x00124b001e71fbf4</friendly_name></zigbee-node><zigbee-node><friendly_name>0x000d6f0005349f80</friendly_name></zigbee-node><zigbee-node><friendly_name>0x000d6f00053ac78c</friendly_name></zigbee-node><zigbee-node><friendly_name>0x000d6f0004f74ce6</friendly_name></zigbee-node><zigbee-node><friendly_name>0x000d6f000a76cdff</friendly_name></zigbee-node></zigbee_nodes>

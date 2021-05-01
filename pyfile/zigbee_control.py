@@ -22,6 +22,7 @@ def zigbee_init():
     broker = '127.0.0.1'
     client.connect(broker)
     print('Connecting to broker...')
+    update_friendly_names()
     fns = get_friendly_names()
     return fns
 
@@ -39,7 +40,6 @@ def on_connect(client, userdata, flags, rc):
 #look through data base file and add any new friendly names to xml file
 def get_friendly_names():
     #read in friendly name data
-    update_friendly_names()
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
@@ -57,16 +57,18 @@ def update_friendly_names():
     root = tree.getroot()
     db_file = open('/opt/zigbee2mqtt/data/database.db')
     curr_devices = []
+    curr_fns = get_friendly_names()
     for obj in db_file:
         curr_devices.append(json.loads(obj))
     for dev in curr_devices:
         _type = dev['type']
         if _type == 'Router':
-            fn = dev['ieeeAddr']            
-            new_node = ET.Element('zigbee-node')
-            ET.SubElement(new_node, 'friendly_name')
-            new_node[0].text = fn
-            root.append(new_node)
+            fn = dev['ieeeAddr']
+            if fn not in curr_fns:
+                new_node = ET.Element('zigbee-node')
+                ET.SubElement(new_node, 'friendly_name')
+                new_node[0].text = fn
+                root.append(new_node)
     tree.write(frnd_file)
     return root
 
@@ -74,7 +76,6 @@ def update_friendly_names():
 def set_state(id, arg):
     global client
     fns = get_friendly_names()
-    print(fns[int(id)])
     command = "{\"state\":\"" + str(arg) + "\"}"
     client.publish('zigbee2mqtt/' + str(fns[int(id)]) + '/set', command)
     return [str(command),id,arg]

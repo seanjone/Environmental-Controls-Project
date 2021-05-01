@@ -51,7 +51,6 @@ def get_friendly_names():
     return friendly_names
 
 #use database file to update friendly name xml
-#remove any unseen fns
 def update_friendly_names():
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
@@ -74,7 +73,7 @@ def update_friendly_names():
     tree.write(frnd_file)
     #check for devices not on network anymore
     fns_new = get_friendly_names()
-    return fns
+    return fns_new
 
 #used to set states of devices, arg is on or off
 def set_state(id, arg):
@@ -91,6 +90,18 @@ def set_cl(id):
     #move cl to top of list
     fns.insert(0, fns.pop(int[id]))
     # edit xml file to reflect current fns
+    frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
+    tree = ET.parse(frnd_file)
+    root = tree.getroot()
+    for child in root:
+        root.remove(child)
+    for fn in fns:
+        new_node = ET.Element('zigbee-node')
+        ET.SubElement(new_node, 'friendly_name')
+        new_node[0].text = fn
+        root.append(new_node)
+    tree.write(frnd_file)
     return fns
 
 #returns dictionary
@@ -98,13 +109,10 @@ def get_states():
     global client
     # use /opt/zigbee2mqtt/data/state.json
     states = {}
-    for fn in fns:
-        command = "{\"state\":\"""\"}"
-        # Publish command to zigbee device
-	# look into topic to retrieve state
-        state = client.publish('zigbee2mqtt/' + fn + '/get', command)
-        state = state['features']['value_on']
-        states[fn] = state
+    state_file = open('/opt/zigbee2mqtt/data/state.json')
+    for obj in state_file:
+        print(obj)
+        #curr_devices.append(json.loads(obj))
     return states
 
 #id given

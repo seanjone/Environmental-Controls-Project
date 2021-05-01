@@ -22,7 +22,6 @@ def zigbee_init():
     broker = '127.0.0.1'
     client.connect(broker)
     print('Connecting to broker...')
-    update_friendly_names()
     fns = get_friendly_names()
     return fns
 
@@ -58,29 +57,26 @@ def update_friendly_names():
     root = tree.getroot()
     db_file = open('/opt/zigbee2mqtt/data/database.db')
     curr_devices = []
-    curr_fns = get_friendly_names()
     for obj in db_file:
         curr_devices.append(json.loads(obj))
     for dev in curr_devices:
         _type = dev['type']
         if _type == 'Router':
-            fn = dev['ieeeAddr']
-            if fn not in curr_fns:
-                new_node = ET.Element('zigbee-node')
-                ET.SubElement(new_node, 'friendly_name')
-                new_node[0].text = fn
-                root.append(new_node)
+            fn = dev['ieeeAddr']            
+            new_node = ET.Element('zigbee-node')
+            ET.SubElement(new_node, 'friendly_name')
+            new_node[0].text = fn
+            root.append(new_node)
     tree.write(frnd_file)
-    #check for devices not on network anymore
-    fns_new = get_friendly_names()
-    return fns_new
+    return root
 
 #used to set states of devices, arg is on or off
 def set_state(id, arg):
     global client
     fns = get_friendly_names()
+    print(fns[int(id)])
     command = "{\"state\":\"" + str(arg) + "\"}"
-    client.publish('zigbee2mqtt/' + fns[int[id]] + '/set', command)
+    client.publish('zigbee2mqtt/' + str(fns[int(id)]) + '/set', command)
     return [str(command),id,arg]
 
 #id given
@@ -112,7 +108,7 @@ def get_states():
     state_file = open('/opt/zigbee2mqtt/data/state.json')
     data = json.load(state_file)
     for obj in data:
-	states[obj] = data[obj]['state']
+        states[obj] = data[obj]['state']
     return states
 
 #id given
@@ -125,13 +121,11 @@ def get_fn(id):
 
 # for testing purposes only
 if __name__ == '__main__':
-    #get command line args for friendly name and command
-    #script called with ID not friendly name
-    #call light is 0
-    #friendly_name = sys.argv[1]
-    #command = sys.argv[2]
-    #command = "{\"state\":\"" + str(command) +"\"}"
-    #Publish command to zigbee device
-    #client.publish('zigbee2mqtt/' + friendly_name + '/set', command)
-    print(get_states())
-    print('Task completed\n')
+    zigbee_init()    
+    while True:
+        comm = input('Control which dev?')
+        fns = get_friendly_names()
+        print(get_states())
+        set_state(comm, 'TOGGLE')
+        print(get_states())
+	

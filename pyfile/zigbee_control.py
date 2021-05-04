@@ -8,9 +8,12 @@ import paho.mqtt.client as mqtt
 import xml.etree.ElementTree as ET
 import os
 import json
+import time
 
 #create an instance of the mqtt client (ZO1 = zigbee outlet control)
 client = mqtt.Client('ZOC')
+states = {}
+messages = {}
 
 #changes init zigbee control node once (not every time script is called) and return friendly names
 def zigbee_init():
@@ -18,12 +21,19 @@ def zigbee_init():
     # set client log and connect callback functions
     client.on_log = on_log
     client.on_connect = on_connect
+    client.on_message = on_message
     # connect client to mqtt broker running locally on pi
     broker = '127.0.0.1'
     client.connect(broker)
     print('Connecting to broker...')
     update_friendly_names()
     fns = get_friendly_names()
+    for fn in fns:
+        try:
+            client.subscribe('zigbee2mqtt/' + str(fn) + '/get')
+        except:
+            continue
+    client.loop_start()
     return fns
 
 #define on_log function for mqtt client
@@ -101,15 +111,23 @@ def set_cl(id):
     tree.write(frnd_file)
     return fns
 
+def on_message(client, userdata, message):
+    global messages
+    messages[message.topic] = message.payload.decode('utf-8')
+    print('Received state')
+
 #returns dictionary
 def get_states():
-    global client
-    # use /opt/zigbee2mqtt/data/state.json
+    global client, states, messages
     states = {}
-    state_file = open('/opt/zigbee2mqtt/data/state.json')
-    data = json.load(state_file)
-    for obj in data:
-        states[obj] = data[obj]['state']
+    fns = get_friendly_names()
+    for fn in fns:
+        command = "{\"state\":\"\"}"
+        client.publish('zigbee2mqtt/' + str(fn) + '/get', command)
+    time.sleep(1)
+    for key in messages:
+        fn = key.split('/')[1]
+        states[fn] = messages[key]['features']['value_on']
     return states
 
 #id given

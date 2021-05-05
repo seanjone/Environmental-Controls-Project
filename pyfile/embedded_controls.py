@@ -57,8 +57,8 @@ def command(args):
     return "{} is not a number.".format(err)
   except IndexError as err:
     return "Device does not exist."
-  except TypeError as err:
-    return "{} does not have the correct number of parameters.\n{}".format(args,instructions)
+  #except TypeError as err:
+  #  return "{} does not have the correct number of parameters.\n{}".format(err,instructions)
 
 def main():
   num_args = len(sys.argv)

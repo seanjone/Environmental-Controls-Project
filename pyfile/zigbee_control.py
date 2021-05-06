@@ -11,7 +11,7 @@ import json
 import time
 import copy
 
-#create an instance of the mqtt client (ZO1 = zigbee outlet control)
+#create an instance of the mqtt client (ZOC = zigbee outlet control)
 client = mqtt.Client('ZOC')
 messages = {}
 
@@ -38,15 +38,15 @@ def zigbee_init():
 
 #define on_log function for mqtt client
 def on_log(client, userdata, level, buf):
-    print('Log: ' + buf)
+    #print('Log: ' + buf)
     return
 
 #define on_connect function for mqtt client
 def on_connect(client, userdata, flags, rc):
-    if(rc == 0):
-        print('Connected\n')
-    else:
-        print('Connect failed with rc='+rc)
+    #if(rc == 0):
+     #   print('Connected\n')
+    #else:
+    #    print('Connect failed with rc='+rc)
     return
 
 #look through data base file and add any new friendly names to xml file
@@ -144,14 +144,14 @@ def get_state(id):
 def get_fn(id):
     return get_friendly_names()[int(id)]
 
+#Called on import 
 zigbee_init()
+
 # for testing purposes only
 if __name__ == '__main__':
     zigbee_init()    
     while True:
         comm = input('Dev id: ')
         fns = get_friendly_names()
-        print(get_states())
         set_state(comm, 'TOGGLE')
-        print(get_states())
 	

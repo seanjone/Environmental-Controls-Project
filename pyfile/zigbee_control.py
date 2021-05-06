@@ -9,10 +9,10 @@ import xml.etree.ElementTree as ET
 import os
 import json
 import time
+import copy
 
 #create an instance of the mqtt client (ZO1 = zigbee outlet control)
 client = mqtt.Client('ZOC')
-states = {}
 messages = {}
 
 #changes init zigbee control node once (not every time script is called) and return friendly names
@@ -38,15 +38,15 @@ def zigbee_init():
 
 #define on_log function for mqtt client
 def on_log(client, userdata, level, buf):
-    #print('Log: ' + buf)
+    print('Log: ' + buf)
     return
 
 #define on_connect function for mqtt client
 def on_connect(client, userdata, flags, rc):
-    #if(rc == 0):
-    #    print('Connected\n')
-    #else:
-    #    print('Connect failed with rc='+rc)
+    if(rc == 0):
+        print('Connected\n')
+    else:
+        print('Connect failed with rc='+rc)
     return
 
 #look through data base file and add any new friendly names to xml file
@@ -95,39 +95,30 @@ def set_state(id, arg):
 #id given
 def set_cl(id):
     #update call light variable
-    fns_tmp = get_friendly_names()
+    fns = get_friendly_names()
     #move cl to top of list
-    fns_tmp.insert(0, fns_tmp.pop(int(id)))
-    fns = []
-    for fn in fns_tmp:
-        if fn not in fns:
-            fns.append(fn)
+    fns.insert(0, fns.pop(int(id)))
     # edit xml file to reflect current fns
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
     root = tree.getroot()
     root.clear()
-    #for child in root:
-    #    root.remove(child)
     for fn in fns:
         new_node = ET.Element('zigbee-node')
         ET.SubElement(new_node, 'friendly_name')
         new_node[0].text = fn
         root.append(new_node)
-    #frnd_file2 = os.path.join(frnd_dir, "friendly_names3.xml")
     tree.write(frnd_file)
     return fns
 
 def on_message(client, userdata, message):
     global messages
     messages[message.topic] = json.loads(message.payload.decode('utf-8'))
-    #print('\t{}'.format(messages))
-    #print('Received state')
-import copy
+
 #returns dictionary
 def get_states():
-    global client, states, messages
+    global client, messages
     states = {}
     fns = get_friendly_names()
     fns_tmp = copy.deepcopy(fns)
@@ -138,7 +129,6 @@ def get_states():
         time.sleep(1.5)
         for key in messages:
             fn = key.split('/')[1]
-            #print(fn,key)
             if fn in fns_tmp:
                 fns_tmp.remove(fn)
             states[fn] = messages[key]['state']
@@ -154,11 +144,7 @@ def get_state(id):
 def get_fn(id):
     return get_friendly_names()[int(id)]
 
-def custom(a,b,c):
-	return a, b, c
-
 zigbee_init()
-
 # for testing purposes only
 if __name__ == '__main__':
     zigbee_init()    

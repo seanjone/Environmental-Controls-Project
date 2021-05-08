@@ -52,13 +52,22 @@ def on_connect(client, userdata, flags, rc):
 #look through data base file and add any new friendly names to xml file
 def get_friendly_names():
     #read in friendly name data
+    states = get_states()
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
     root = tree.getroot()
     friendly_names = []
     for zig_node in root:
-        friendly_names.append(zig_node[0].text)
+        if zig_node[0].text in states.keys():
+            friendly_names.append(zig_node[0].text)
+    root.clear()
+    for fn in friendly_names:
+        new_node = ET.Element('zigbee-node')
+        ET.SubElement(new_node, 'friendly_name')
+        new_node[0].text = fn
+        root.append(new_node)
+    tree.write(frnd_file)
     return friendly_names
 
 #use database file to update friendly name xml
@@ -122,7 +131,7 @@ def get_states():
     states = {}
     fns = get_friendly_names()
     fns_tmp = copy.deepcopy(fns)
-    for i in range(5):
+    for i in range(8):
         for fn in fns_tmp:
             command = "{\"state\":\"\"}"
             client.publish('zigbee2mqtt/' + str(fn) + '/get', command)

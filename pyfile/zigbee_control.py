@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 import os
 import json
 import time
-import copy
 
 #create an instance of the mqtt client (ZOC = zigbee outlet control)
 client = mqtt.Client('ZOC')
@@ -25,8 +24,6 @@ def zigbee_init():
     # connect client to mqtt broker running locally on pi
     broker = '127.0.0.1'
     client.connect(broker)
-    #print('Connecting to broker...')
-    update_friendly_names()
     fns = get_friendly_names()
     for fn in fns:
         try:
@@ -52,44 +49,28 @@ def on_connect(client, userdata, flags, rc):
 #look through data base file and add any new friendly names to xml file
 def get_friendly_names():
     #read in friendly name data
-    states = get_states()
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
     root = tree.getroot()
     friendly_names = []
     for zig_node in root:
-        if zig_node[0].text in states.keys():
-            friendly_names.append(zig_node[0].text)
-    root.clear()
-    for fn in friendly_names:
-        new_node = ET.Element('zigbee-node')
-        ET.SubElement(new_node, 'friendly_name')
-        new_node[0].text = fn
-        root.append(new_node)
-    tree.write(frnd_file)
+        friendly_names.append(zig_node[0].text)
     return friendly_names
 
 #use database file to update friendly name xml
 def update_friendly_names():
+    states = get_states()
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
     root = tree.getroot()
-    db_file = open('/opt/zigbee2mqtt/data/database.db')
-    curr_devices = []
-    curr_fns = get_friendly_names()
-    for obj in db_file:
-        curr_devices.append(json.loads(obj))
-    for dev in curr_devices:
-        _type = dev['type']
-        if _type == 'Router':
-            fn = dev['ieeeAddr']
-            if fn not in curr_fns:
-                new_node = ET.Element('zigbee-node')
-                ET.SubElement(new_node, 'friendly_name')
-                new_node[0].text = fn
-                root.append(new_node)
+    root.clear()
+    for fn in states.keys():
+        new_node = ET.Element('zigbee-node')
+        ET.SubElement(new_node, 'friendly_name')
+        new_node[0].text = fn
+        root.append(new_node)
     tree.write(frnd_file)
     return root
 
@@ -130,18 +111,17 @@ def get_states():
     global client, messages
     states = {}
     fns = get_friendly_names()
-    fns_tmp = copy.deepcopy(fns)
-    for i in range(8):
-        for fn in fns_tmp:
+    for i in range(10):
+        for fn in fns:
             command = "{\"state\":\"\"}"
             client.publish('zigbee2mqtt/' + str(fn) + '/get', command)
-        time.sleep(1.5)
+        time.sleep(1)
         for key in messages:
             fn = key.split('/')[1]
-            if fn in fns_tmp:
-                fns_tmp.remove(fn)
+            if fn in fns:
+                fns.remove(fn)
             states[fn] = messages[key]['state']
-        if len(fns_tmp)==0:
+        if len(fns)==0:
             return states
     return states
 

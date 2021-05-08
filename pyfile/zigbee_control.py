@@ -24,7 +24,16 @@ def zigbee_init():
     # connect client to mqtt broker running locally on pi
     broker = '127.0.0.1'
     client.connect(broker)
-    fns = get_friendly_names()
+    fns = []
+    db_file = open('/opt/zigbee2mqtt/data/database.db')
+    curr_devices = []
+    for obj in db_file:
+        curr_devices.append(json.loads(obj))
+    for dev in curr_devices:
+        _type = dev['type']
+        if _type == 'Router':
+            fn = dev['ieeeAddr']
+            fns.append(fn)
     for fn in fns:
         try:
             client.subscribe('zigbee2mqtt/' + str(fn))# + '/get')
@@ -110,8 +119,17 @@ def on_message(client, userdata, message):
 def get_states():
     global client, messages
     states = {}
-    fns = get_friendly_names()
-    for i in range(10):
+    fns = []
+    db_file = open('/opt/zigbee2mqtt/data/database.db')
+    curr_devices = []
+    for obj in db_file:
+        curr_devices.append(json.loads(obj))
+    for dev in curr_devices:
+        _type = dev['type']
+        if _type == 'Router':
+            fn = dev['ieeeAddr']
+            fns.append(fn)
+    for i in range(5):
         for fn in fns:
             command = "{\"state\":\"\"}"
             client.publish('zigbee2mqtt/' + str(fn) + '/get', command)

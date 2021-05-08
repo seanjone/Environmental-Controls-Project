@@ -44,7 +44,7 @@ def command(args):
               'get_fn':[zigbee_control.get_fn,[args[1].replace("cl","0")] if nArgs==1 else None], #friendly_names[id]
               'update_fns':[zigbee_control.update_friendly_names,[] if nArgs==0 else None], #adds new devices to friendly_names
               'set_cl':[zigbee_control.set_cl,[args[1]] if nArgs==1 else None], #moves call light to top of list
-              'custom_zigbee':[zigbee_control.custom,[args[1],args[2:4],args[4:]] if nArgs==5 else None], #dummy program for custom functionality
+              #'custom_zigbee':[zigbee_control.custom,[args[1],args[2:4],args[4:]] if nArgs==5 else None], #dummy program for custom functionality
               'help':[lambda :instructions,[]]
               }
   try:

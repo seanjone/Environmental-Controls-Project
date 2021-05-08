@@ -129,7 +129,7 @@ def get_states():
         if _type == 'Router':
             fn = dev['ieeeAddr']
             fns.append(fn)
-    for i in range(5):
+    for i in range(10):
         for fn in fns:
             command = "{\"state\":\"\"}"
             client.publish('zigbee2mqtt/' + str(fn) + '/get', command)

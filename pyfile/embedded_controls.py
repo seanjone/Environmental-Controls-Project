@@ -7,7 +7,7 @@ def init_devices():
 #   doesn't do anything yet
   ir_blaster = ir_control.init()
 #   returns list of friendly names
-  zigbee_devices = zigbee_control.zigbee_init()
+  zigbee_devices = zigbee_control.get_friendly_names()
   # # gets friendly name of call light that was stored
   # call_light_filename = os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','call_light.txt')
   # call_light_file = open(call_light_filename, 'r')
@@ -33,8 +33,8 @@ def command(args):
                   "get_fns\t\tget_fn <id>\tupdate_fns\n"
                   "set_cl <id>\tcustom_zigbee <arg1> <arg2a> <arg2b> <arg3a> <arg3b>")
   commands = {'init':[init_devices,[] if nArgs==0 else None], #inits ir and zigbee devices
-              'ir':[ir_control.send_cmd,[args[1]] if nArgs==1 else None], #sends ir command
-              'custom_ir':[ir_control.custom,[args[1],args[2],args[3]] if nArgs==3 else None], #dummy program for custom functionality
+              'ir':[ir_control.send_cmd,([args[1],args[2]] if nArgs==2 else [args[1],'.5']) if nArgs==1 or nArgs==2 else None], #sends ir command
+              #'custom_ir':[ir_control.custom,[args[1],args[2],args[3]] if nArgs==3 else None], #dummy program for custom functionality
               #'cl':[zigbee_control.set_state,['0',args[1]] if nArgs==1 else None], #sends outlet command
               #'o':[zigbee_control.set_state,[args[1].replace("cl","0"),args[2]] if nArgs==2 else None], #sends outlet command
               'set_state':[zigbee_control.set_state,[args[1].replace("cl","0"),args[2].upper()] if nArgs==2 else None],
@@ -53,8 +53,8 @@ def command(args):
     return "{} is not a command.\n{}".format(err,instructions)
   try:
     return cmd[0](*cmd[1]) #function_name(parameter1,parameter2,...)
-  except ValueError as err:
-    return "{} is not a number.".format(err)
+#   except ValueError as err:
+#     return "{} is not a number.".format(err)
   except IndexError as err:
     return "Device does not exist."
   #except TypeError as err:

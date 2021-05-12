@@ -70,16 +70,18 @@ def get_friendly_names():
 #use database file to update friendly name xml
 def update_friendly_names():
     states = get_states()
+    curr_fns = get_friendly_names()
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
     root = tree.getroot()
     root.clear()
-    for fn in states.keys():
-        new_node = ET.Element('zigbee-node')
-        ET.SubElement(new_node, 'friendly_name')
-        new_node[0].text = fn
-        root.append(new_node)
+    for fn in curr_fns:
+	if fn in states.keys():
+            new_node = ET.Element('zigbee-node')
+            ET.SubElement(new_node, 'friendly_name')
+            new_node[0].text = fn
+            root.append(new_node)
     tree.write(frnd_file)
     return root
 

@@ -1,11 +1,11 @@
 import time
-import lirc
+import os
 
 def init():
     return
 
 def send_cmd(button,duration):
-    lirc.send_start("sharp",button)
+    os.system("irsend SEND_START test " + button.upper())
     time.sleep(float(duration))
-    lirc.send_stop("sharp",button)
+    os.system("irsend SEND_STOP test " + button.upper())
     return "message sent"

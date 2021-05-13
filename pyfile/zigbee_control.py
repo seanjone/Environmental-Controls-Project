@@ -36,7 +36,7 @@ def zigbee_init():
             fns.append(fn)
     for fn in fns:
         try:
-            client.subscribe('zigbee2mqtt/' + str(fn))# + '/get')
+            client.subscribe('zigbee2mqtt/' + str(fn))
         except:
             continue
     client.loop_start()
@@ -44,7 +44,7 @@ def zigbee_init():
 
 #define on_log function for mqtt client
 def on_log(client, userdata, level, buf):
-    #print('Log: ' + buf)
+    print('Log: ' + buf)
     return
 
 #define on_connect function for mqtt client
@@ -69,21 +69,30 @@ def get_friendly_names():
 
 #use database file to update friendly name xml
 def update_friendly_names():
-    states = get_states()
+    fns = []
+    db_file = open('/opt/zigbee2mqtt/data/database.db')
+    curr_devices = []
+    for obj in db_file:
+        curr_devices.append(json.loads(obj))
+    for dev in curr_devices:
+        _type = dev['type']
+        if _type == 'Router':
+            fn = dev['ieeeAddr']
+            fns.append(fn)
     curr_fns = get_friendly_names()
     frnd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     frnd_file = os.path.join(frnd_dir, 'friendly_names.xml')
     tree = ET.parse(frnd_file)
     root = tree.getroot()
-    root.clear()
-    for fn in curr_fns:
-	if fn in states.keys():
+    for fn in fns:
+        if fn not in curr_fns:
             new_node = ET.Element('zigbee-node')
             ET.SubElement(new_node, 'friendly_name')
             new_node[0].text = fn
             root.append(new_node)
+            curr_fns.append(fn)
     tree.write(frnd_file)
-    return root
+    return curr_fns
 
 #used to set states of devices, arg is on or off
 def set_state(id, arg):
@@ -91,7 +100,8 @@ def set_state(id, arg):
     fns = get_friendly_names()
     command = "{\"state\":\"" + str(arg) + "\"}"
     client.publish('zigbee2mqtt/' + str(fns[int(id)]) + '/set', command)
-    return [str(command),id,arg]
+    time.sleep(1)
+    return fns[int(id)], command
 
 #id given
 def set_cl(id):
@@ -131,11 +141,11 @@ def get_states():
         if _type == 'Router':
             fn = dev['ieeeAddr']
             fns.append(fn)
-    for i in range(10):
+    for i in range(3):
         for fn in fns:
             command = "{\"state\":\"\"}"
             client.publish('zigbee2mqtt/' + str(fn) + '/get', command)
-        time.sleep(1)
+        time.sleep(10)
         for key in messages:
             fn = key.split('/')[1]
             if fn in fns:

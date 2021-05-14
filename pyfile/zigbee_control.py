@@ -44,7 +44,7 @@ def zigbee_init():
 
 #define on_log function for mqtt client
 def on_log(client, userdata, level, buf):
-    print('Log: ' + buf)
+    #print('Log: ' + buf)
     return
 
 #define on_connect function for mqtt client
